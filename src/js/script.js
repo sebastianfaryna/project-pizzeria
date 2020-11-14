@@ -93,59 +93,64 @@
       /* START: click event listener to trigger */
       clickableTrigger.addEventListener('click', function(event) {
 
-          /* prevent default action for event */
-          event.preventDefault();
+        /* prevent default action for event */
+        event.preventDefault();
 
-          /* toggle (dodanie klasy jeśli jej nie było lub odwrotnie) active class on element of thisProduct */
-          thisProduct.classList.toggle('active');
+        /* toggle (dodanie klasy jeśli jej nie było lub odwrotnie) active class on element of thisProduct */
+        thisProduct.element.classList.toggle('active');
 
-          /* find ALL activeProducts */
-          const activeProducts =
+        /* find ALL activeProducts */
+        const activeProducts = document.querySelectorAll(select.all.menuProductsActive);
 
-            //* START LOOP: for each activeProduct */
+        //* START LOOP: for each activeProduct */
+        for (const activeProduct of activeProducts) {
 
-            ///* START: if the active product isn't the element of thisProduct */
+          ///* START: if the active product isn't the element of thisProduct */
+          if (activeProduct != thisProduct.element) {
 
             ////* remove class 'active' for the activeProduct */
+            activeProduct.classList.remove(classNames.menuProduct.wrapperActive);
 
             ///* END: if the activeProduct isn't the element of thisProduct */
+          }
 
-            //* END LOOP: for each active product */
-
-            /* END: click event listener to trigger */
+          //* END LOOP: for each active product */
         }
-      }
+
+        /* END: click event listener to trigger */
+      });
     }
-
-    const app = {
-      initMenu: function() {
-        const thisApp = this;
-        console.log('thisApp.data: ', thisApp.data);
-
-        for (let productData in thisApp.data.products) {
-          new Product(productData, thisApp.data.products[productData]);
-        }
-      },
-
-      initData: function() {
-        const thisApp = this;
-
-        thisApp.data = dataSource;
-      },
-
-      init: function() {
-        const thisApp = this;
-        console.log('*** App starting ***');
-        console.log('thisApp:', thisApp);
-        console.log('classNames:', classNames);
-        console.log('settings:', settings);
-        console.log('templates:', templates);
-
-        thisApp.initData();
-
-        thisApp.initMenu();
-      },
-    };
-
-    app.init();
   }
+
+  const app = {
+    initMenu: function() {
+      const thisApp = this;
+      console.log('thisApp.data: ', thisApp.data);
+
+      for (let productData in thisApp.data.products) {
+        new Product(productData, thisApp.data.products[productData]);
+      }
+    },
+
+    initData: function() {
+      const thisApp = this;
+
+      thisApp.data = dataSource;
+    },
+
+    init: function() {
+      const thisApp = this;
+      console.log('*** App starting ***');
+      console.log('thisApp:', thisApp);
+      console.log('classNames:', classNames);
+      console.log('settings:', settings);
+      console.log('templates:', templates);
+
+      thisApp.initData();
+
+      thisApp.initMenu();
+    },
+  };
+
+  app.init();
+}
