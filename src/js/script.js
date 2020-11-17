@@ -93,6 +93,7 @@
       thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
       thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
       thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
+      thisProduct.imageWrapper = thisProduct.element.querySelector(select.menuProduct.imageWrapper);
     }
 
     initAccordion() {
@@ -212,6 +213,37 @@
             /* END ELSE IF: if option is  N O T  selected  A N D  option is default */
           }
 
+          /* START IF: option is selected all images found in thisProduct.imageWrapper for this option should receive a class saved in classNames.menuProduct.imageVisible */
+          if (optionSelected == true) {
+            const optionImages = thisProduct.imageWrapper.querySelectorAll('.' + paramId + '-' + optionId);
+
+            /* START LOOP add class*/
+            for (let optionImage of optionImages) {
+
+              // console.log('optionImage: ', optionImage);
+
+              optionImage.classList.add(classNames.menuProduct.imageVisible);
+
+              /* END LOOP */
+            }
+
+            /* END IF */
+          }
+
+          /* START ELSE: if  N O T  all images for this option should remove class saved in classNames.menuProduct.imageVisible */
+          else {
+            const optionImages = thisProduct.imageWrapper.querySelectorAll('.' + paramId + '-' + optionId);
+
+            /* START LOOP remove class*/
+            for (let optionImage of optionImages) {
+              optionImage.classList.remove(classNames.menuProduct.imageVisible);
+
+              /* END LOOP */
+            }
+
+            /* END ELSE */
+          }
+
           /* END LOOP: for each optionId in param.options */
         }
 
@@ -228,7 +260,7 @@
   const app = {
     initMenu: function() {
       const thisApp = this;
-      console.log('thisApp.data: ', thisApp.data);
+      // console.log('thisApp.data: ', thisApp.data);
 
       for (let productData in thisApp.data.products) {
         new Product(productData, thisApp.data.products[productData]);
