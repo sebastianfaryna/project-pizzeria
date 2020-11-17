@@ -60,9 +60,12 @@
       thisProduct.data = data;
 
       thisProduct.renderInMenu();
+      thisProduct.getElements();
       thisProduct.initAccordion();
+      thisProduct.initOrderForm();
+      thisProduct.processOrder();
 
-      console.log('new Product: ', thisProduct);
+      // console.log('new Product: ', thisProduct);
     }
 
     renderInMenu() {
@@ -82,13 +85,23 @@
 
     }
 
+    getElements() {
+      const thisProduct = this;
+
+      thisProduct.accordionTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+      thisProduct.form = thisProduct.element.querySelector(select.menuProduct.form);
+      thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
+      thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
+      thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
+    }
+
     initAccordion() {
       const thisProduct = this;
 
       /* find the clickableTrigger (the element that should react to clicking) */
-      const clickableTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+      const clickableTrigger = thisProduct.accordionTrigger;
 
-      console.log('czy był klik?', clickableTrigger);
+      // console.log('czy był klik?', clickableTrigger);
 
       /* START: click event listener to trigger */
       clickableTrigger.addEventListener('click', function(event) {
@@ -120,7 +133,97 @@
         /* END: click event listener to trigger */
       });
     }
-  }
+
+    /* Event listenery dla formularza */
+    initOrderForm() {
+
+      const thisProduct = this;
+
+      // console.log('initOrderForm: ', thisProduct);
+
+      thisProduct.form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        thisProduct.processOrder();
+      });
+
+      for (let input of thisProduct.formInputs) {
+        input.addEventListener('change', function() {
+          thisProduct.processOrder();
+        });
+      }
+
+      thisProduct.cartButton.addEventListener('click', function(event) {
+        event.preventDefault();
+        thisProduct.processOrder();
+      });
+
+    }
+
+    /* Obliczamy cenę produktu */
+    processOrder() {
+      const thisProduct = this;
+      // console.log('processOrder: ', thisProduct);
+
+      /* read all data from the form (using utils.serializeFormToObject) and save it to const formData */
+      const formData = utils.serializeFormToObject(thisProduct.form);
+      // console.log('formData: ', formData);
+
+      /* set variable price to equal thisProduct.data.price */
+      let price = thisProduct.data.price;
+
+      /* START LOOP: for each paramId in thisProduct.data.params */
+      for (let paramId in thisProduct.data.params) {
+
+        /* save the element in thisProduct.data.params with key paramId as const param */
+        const param = thisProduct.data.params[paramId];
+
+        /* START LOOP: for each optionId in param.options */
+        for (let optionId in param.options) {
+
+          /* save the element in param.options with key optionId as const option */
+          const option = param.options[optionId];
+
+          /* in const optionSelected check if there is a formData[paramId] and, if so, if this array contains a key equal to the value of the optionId */
+          const optionSelected = formData.hasOwnProperty(paramId) && formData[paramId].indexOf(optionId) > -1;
+
+          /* START IF: if option is selected  A N D  option is  N O T  default */
+          if (optionSelected && !option.default) {
+
+            /* add price of option to variable price */
+            const addPriceOfOption = option.price;
+            price += addPriceOfOption;
+
+            // console.log('addPriceOfOption: ', addPriceOfOption);
+            // console.log('price: ', price);
+
+            /* END IF: if option is selected  A N D  option is  N O T  default */
+          }
+
+          /* START ELSE IF: if option is  N O T  selected  A N D  option is default */
+          else if (!optionSelected && option.default) {
+
+            /* deduct price of option from price */
+            const deductPriceOfOption = option.price;
+            price -= deductPriceOfOption;
+
+            // console.log('deductPriceOfOption: ', deductPriceOfOption);
+            // console.log('price: ', price);
+
+            /* END ELSE IF: if option is  N O T  selected  A N D  option is default */
+          }
+
+          /* END LOOP: for each optionId in param.options */
+        }
+
+        /* END LOOP: for each paramId in thisProduct.data.params */
+      }
+
+      /* set the contents of thisProduct.priceElem to be the value of variable price */
+      thisProduct.priceElem.innerHTML = price;
+
+    } // END processOrder
+
+  } // END class Product
 
   const app = {
     initMenu: function() {
