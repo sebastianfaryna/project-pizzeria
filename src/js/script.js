@@ -276,10 +276,12 @@
     constructor(element) {
       const thisWidget = this;
       thisWidget.getElements(element);
+      thisWidget.value = settings.amountWidget.defaultValue;
       thisWidget.setValue(thisWidget.input.value);
+      thisWidget.initActions();
 
-      console.log('amountWidget" ', thisWidget);
-      console.log('constructor arguments: ', element);
+      // console.log('amountWidget: ', thisWidget);
+      // console.log('constructor arguments: ', element);
     }
 
     getElements(element) {
@@ -287,17 +289,20 @@
 
       thisWidget.element = element;
       thisWidget.input = thisWidget.element.querySelector(select.widgets.amount.input);
-      thisWidget.linkDecrease = thisWidget.element.querySelectorAll(select.widgets.amount.linkDecrease);
-      thisWidget.linkIncrease = thisWidget.element.querySelectorAll(select.widgets.amount.linkIncrease);
+      thisWidget.linkDecrease = thisWidget.element.querySelector(select.widgets.amount.linkDecrease);
+      thisWidget.linkIncrease = thisWidget.element.querySelector(select.widgets.amount.linkIncrease);
     }
 
     setValue(value) {
       const thisWidget = this;
       const newValue = parseInt(value); //konwersja na liczbę
 
-      /* TODO Add validation */
-      thisWidget.value = newValue;
-      thisWidget.announce();
+      /* Validation */
+      /* IF inna niż domyślna && >= defMin && <= defMax || newValue == 1 bo nie dało się odejmować poniżej 2 */
+      if (newValue != settings.amountWidget.defaultValue && newValue >= settings.amountWidget.defaultMin && newValue <= settings.amountWidget.defaultMax || newValue == 1) {
+        thisWidget.value = newValue;
+        thisWidget.announce();
+      }
       thisWidget.input.value = thisWidget.value;
 
     }
