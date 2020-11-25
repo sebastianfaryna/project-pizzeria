@@ -387,7 +387,9 @@
     announce() {
       const thisWidget = this;
 
-      const event = new Event('updated');
+      const event = new CustomEvent('updated', {
+        bubbles: true
+      });
       thisWidget.element.dispatchEvent(event);
     }
 
@@ -403,7 +405,9 @@
 
       thisCart.initActions();
 
-      console.log('new Cart', thisCart);
+      thisCart.deliveryFee = settings.cart.defaultDeliveryFee;
+
+      // console.log('new Cart', thisCart);
     }
 
     getElements(element) {
@@ -417,6 +421,14 @@
 
       /* find cart container */
       thisCart.dom.productList = thisCart.dom.wrapper.querySelector(select.cart.productList);
+
+      /* Tworzymy tutaj tablicę, która zawiera cztery stringi (ciągi znaków). Każdy z nich jest kluczem w obiekcie select.cart. Wykorzystamy tę tablicę, aby szybko stworzyć cztery właściwości obiektu thisCart.dom o tych samych kluczach. Każda z nich będzie zawierać kolekcję elementów znalezionych za pomocą odpowiedniego selektora. */
+      thisCart.renderTotalsKeys = ['totalNumber', 'totalPrice', 'subtotalPrice', 'deliveryFee'];
+
+      for (let key of thisCart.renderTotalsKeys) {
+        thisCart.dom[key] = thisCart.dom.wrapper.querySelectorAll(select.cart[key]);
+      }
+
     }
 
     initActions() {
@@ -425,6 +437,33 @@
       thisCart.dom.toggleTrigger.addEventListener('click', function() {
         thisCart.dom.wrapper.classList.toggle(classNames.cart.wrapperActive); //handler listenera ma toggle'ować klasę zapisaną w classNames.cart.wrapperActive na elemencie thisCart.dom.wrapper
       });
+
+      /* Nasłuchujemy tutaj na liście produktów, w której umieszczamy produkty, w których znajduje się widget liczby sztuk, który generuje ten event. */
+      thisCart.dom.productList.addEventListener('updated', function() {
+        thisCart.update();
+      });
+
+      thisCart.dom.productList.addEventListener('remove', function() {
+        thisCart.remove(event.detail.cartProduct);
+
+      });
+
+    }
+
+    remove(cartProduct) {
+      const thisCart = this;
+
+      /* zadeklarować stałą index, której wartością będzie indeks cartProduct w tablicy thisCart.products */
+      const index = thisCart.products.indexOf(cartProduct);
+
+      /* użyć metody splice do usunięcia elementu o tym indeksie z tablicy thisCart.products */
+      thisCart.products.splice(index);
+
+      /* usunąć z DOM element cartProduct.dom.wrapper */
+      cartProduct.dom.wrapper.remove();
+
+      /* wywołać metodę update w celu przeliczenia sum po usunięciu produktu */
+      thisCart.update();
     }
 
     add(menuProduct) {
@@ -444,9 +483,130 @@
       thisCart.dom.productList.appendChild(generatedDOM);
 
       // console.log('adding productMenu', menuProduct);
+
+      thisCart.products.push(new CartProduct(menuProduct, generatedDOM));
+      // console.log('thisCart.products', thisCart.products);
+
+      thisCart.update();
+
+    }
+
+    update() {
+      const thisCart = this;
+      thisCart.totalNumber = 0;
+      thisCart.subtotalPrice = 0;
+      for (let product of thisCart.products) {
+        thisCart.subtotalPrice += product.price;
+        thisCart.totalNumber += product.amount;
+      }
+
+      thisCart.totalPrice = thisCart.subtotalPrice + thisCart.deliveryFee;
+
+      console.log('totalNumber: ', thisCart.totalNumber, 'subtotalPrice: ', thisCart.subtotalPrice, 'thisCart.totalPrice: ', thisCart.totalPrice);
+
+      for (let key of thisCart.renderTotalsKeys) {
+        for (let elem of thisCart.dom[key]) {
+          elem.innerHTML = thisCart[key];
+        }
+      }
+
     }
 
   }
+
+  class CartProduct {
+    constructor(menuProduct, element) {
+      /* zdefiniuj stałą thisCartProduct i zapisz w niej obiekt this */
+      const thisCartProduct = this;
+
+      /* zapisz właściwości thisCartProduct czerpiąc wartości z menuProduct dla tych właściwości: id, name, price, priceSingle, amount, */
+      thisCartProduct.id = menuProduct.id;
+      thisCartProduct.name = menuProduct.name;
+      thisCartProduct.price = menuProduct.price;
+      thisCartProduct.priceSingle = menuProduct.priceSingle;
+      thisCartProduct.amount = menuProduct.amount;
+
+      /* zapisz właściwość thisCartProduct.params nadając jej wartość JSON.parse(JSON.stringify(menuProduct.params)) */
+      thisCartProduct.params = JSON.parse(JSON.stringify(menuProduct.params));
+
+      /* wykonaj metodę getElements przekazując jej argument element, */
+      thisCartProduct.getElements(element);
+
+      /* dodaj console.log wyświetlający thisCartProduct */
+      // console.log('new CartProduct: ', thisCartProduct);
+      // console.log('productData: ', menuProduct);
+
+      /* wykonanie metody */
+      thisCartProduct.initAmountWidget();
+      thisCartProduct.initActions();
+
+    }
+
+    /* stwórz metodę getElements przyjmującą argument element */
+    getElements(element) {
+
+      /* a w tej metodzie: */
+      /* zdefiniuj stałą thisCartProduct i zapisz w niej obiekt this, */
+      const thisCartProduct = this;
+
+      /* stwórz pusty obiekt thisCartProduct.dom */
+      thisCartProduct.dom = {};
+
+      /* stwórz właściwość thisCartProduct.dom.wrapper i przypisz jej wartość argumentu element */
+      thisCartProduct.dom.wrapper = element;
+
+      /* stwórz kolejnych kilka właściwości obiektu thisCartProduct.dom i przypisz im elementy znalezione we wrapperze; te właściwości to: amountWidget, price, edit, remove (ich selektory znajdziesz w select.cartProduct) */
+      thisCartProduct.dom.amountWidget = thisCartProduct.dom.wrapper.querySelector(select.cartProduct.amountWidget);
+      thisCartProduct.dom.price = thisCartProduct.dom.wrapper.querySelector(select.cartProduct.price);
+      thisCartProduct.dom.edit = thisCartProduct.dom.wrapper.querySelector(select.cartProduct.edit);
+      thisCartProduct.dom.remove = thisCartProduct.dom.wrapper.querySelector(select.cartProduct.remove);
+    }
+
+    initAmountWidget() {
+      const thisCartProduct = this;
+      thisCartProduct.amountWidget = new AmountWidget(thisCartProduct.dom.amountWidget);
+
+      thisCartProduct.dom.amountWidget.addEventListener('updated', function() {
+        thisCartProduct.amount = thisCartProduct.amountWidget.value;
+        thisCartProduct.price = thisCartProduct.priceSingle * thisCartProduct.amount;
+        thisCartProduct.dom.price.innerHTML = thisCartProduct.price;
+      });
+
+    }
+
+    remove() {
+      const thisCartProduct = this;
+
+      const event = new CustomEvent('remove', {
+        bubbles: true,
+        /* właściwość detail: Możemy w niej przekazać dowolne informacje do handlera eventu. W tym przypadku przekazujemy odwołanie do tej instancji, dla której kliknięto guzik usuwania. */
+        detail: {
+          cartProduct: thisCartProduct,
+        },
+      });
+
+      thisCartProduct.dom.wrapper.dispatchEvent(event);
+
+    }
+
+    initActions() {
+      const thisCartProduct = this;
+
+      /* dwa listenery eventów 'click': jeden dla guzika thisCartProduct.dom.edit, a drugi dla thisCartProduct.dom.remove. Oba mają blokować domyślną akcję dla tego eventu. Guzik edycji na razie nie będzie niczego robił, ale w handlerze guzika usuwania możemy dodać wywołanie metody remove. */
+
+      thisCartProduct.dom.edit.addEventListener('click', function(event) {
+        event.preventDefault();
+      });
+
+      thisCartProduct.dom.remove.addEventListener('click', function(event) {
+        event.preventDefault();
+        thisCartProduct.remove();
+        console.log('REMOVE?', thisCartProduct.remove);
+      });
+
+    }
+
+  } // END Class CartProduct
 
   const app = {
     initMenu: function() {
