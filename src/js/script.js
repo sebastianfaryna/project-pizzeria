@@ -59,11 +59,9 @@
       wrapperActive: 'active',
       imageVisible: 'active',
     },
-    // CODE ADDED START
     cart: {
       wrapperActive: 'active',
     },
-    // CODE ADDED END
   };
 
   const settings = {
@@ -71,12 +69,16 @@
       defaultValue: 1,
       defaultMin: 1,
       defaultMax: 9,
-    }, // CODE CHANGED
-    // CODE ADDED START
+    },
     cart: {
       defaultDeliveryFee: 20,
     },
-    // CODE ADDED END
+    /* konfiguracja parametrów, które będą nam potrzebne do łączenia się z API: */
+    db: {
+      url: '//localhost:3131',
+      product: 'product',
+      order: 'order',
+    },
   };
 
   const templates = {
@@ -429,6 +431,14 @@
         thisCart.dom[key] = thisCart.dom.wrapper.querySelectorAll(select.cart[key]);
       }
 
+      /* dodaj właściwość thisCart.dom.form i przypisz jej element znaleziony we wrapperze koszyka za pomocą selektora zapisanego w select.cart.form */
+      thisCart.dom.form = thisCart.dom.wrapper.querySelector(select.cart.form);
+
+      /* właściwości dla inputów na numer telefonu i adres. */
+      thisCart.dom.phone = thisCart.dom.wrapper.querySelector(select.cart.phone);
+
+      thisCart.dom.address = thisCart.dom.wrapper.querySelector(select.cart.address);
+
     }
 
     initActions() {
@@ -445,9 +455,58 @@
 
       thisCart.dom.productList.addEventListener('remove', function(event) {
         thisCart.remove(event.detail.cartProduct);
-
       });
 
+      thisCart.dom.form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        thisCart.sendOrder();
+      });
+
+    }
+
+    sendOrder() {
+      const thisCart = this;
+
+      /* w stałej url umieszczamy adres endpointu */
+      const url = settings.db.url + '/' + settings.db.order;
+
+      /* 'payload' czyli ładunek - dane, któe będą wysłane do serwera */
+      const payload = {
+        phone: thisCart.dom.phone.value, // musi być .VALUE bo nie wyświetla wartości
+        address: thisCart.dom.address.value, //musi być .VALUE bo nie wyświetla zawartości inputu
+        totalNumber: thisCart.totalNumber,
+        products: [], // patrz pętla poniżej
+        subtotalPrice: thisCart.subtotalPrice,
+        deliveryFee: thisCart.deliveryFee,
+        totalPrice: thisCart.totalPrice,
+      };
+
+      console.log('sendOrder PAYLOAD: ', payload);
+
+      /* dodaj pętlę iterującą po wszystkich thisCart.products */
+      for (let product of thisCart.products) {
+
+        /* PUSH dodaje do tablicy */
+        payload.products.push(product.getData());
+
+        // console.log('product.getData:', product.getData());
+      }
+
+      /* opcje konfigurujące zapytania. POST służy do wysyłąnia nowych danych do API. Ustawiamy header json zrozumiały dla serwera. Body to treść, którą wysyłamy. Tutaj używamy metody JSON.stringify aby przekonwertować obiekt payload na string w formacie JSON */
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      };
+
+      fetch(url, options)
+        .then(function(response) {
+          return response.json();
+        }).then(function(parsedResponse) {
+          console.log('parsedResponse: ', parsedResponse);
+        });
     }
 
     remove(cartProduct) {
@@ -606,6 +665,21 @@
 
     }
 
+    getData() {
+      const thisCartProduct = this;
+      const productInfo = {
+        id: thisCartProduct.id,
+        amount: thisCartProduct.amount,
+        price: thisCartProduct.price,
+        priceSingle: thisCartProduct.priceSingle,
+        params: thisCartProduct.params,
+      };
+
+      // console.log('getData productInfo: ', productInfo);
+
+      return productInfo;
+    }
+
   } // END Class CartProduct
 
   const app = {
@@ -614,14 +688,38 @@
       // console.log('thisApp.data: ', thisApp.data);
 
       for (let productData in thisApp.data.products) {
-        new Product(productData, thisApp.data.products[productData]);
+        new Product(thisApp.data.products[productData].id, thisApp.data.products[productData]);
       }
     },
 
     initData: function() {
       const thisApp = this;
 
-      thisApp.data = dataSource;
+      thisApp.data = {};
+
+      /* zapisz w stałęj url adres endpointu */
+      const url = settings.db.url + '/' + settings.db.product;
+
+      /* wysłanie zapytania AJAX za pomocą funkcji fetch pod podany adres url endpointu */
+      fetch(url)
+        .then(function(rawResponse) {
+
+          /* otrzymaną odpowiedź konwertujemy z json-a na tablicę */
+          return rawResponse.json();
+        })
+        .then(function(parsedResponse) {
+
+          /* po otrzymaniu skonwertowanej odpowiedzi wyświetlamy ją w konsoli */
+          // console.log('parsedResponse: ', parsedResponse);
+
+          /* save parsedResponse as thisApp.data.products */
+          thisApp.data.products = parsedResponse;
+
+          /* execute initMenu method */
+          thisApp.initMenu();
+        });
+
+      // console.log('thisApp.data: ', JSON.stringify(thisApp.data));
     },
 
     initCart: function() {
@@ -639,8 +737,6 @@
       // console.log('templates:', templates);
 
       thisApp.initData();
-
-      thisApp.initMenu();
 
       thisApp.initCart();
     },
