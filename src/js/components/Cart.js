@@ -14,7 +14,6 @@ class Cart {
 
     thisCart.deliveryFee = settings.cart.defaultDeliveryFee;
 
-    // console.log('new Cart', thisCart);
   }
 
   getElements(element) {
@@ -86,15 +85,11 @@ class Cart {
       totalPrice: thisCart.totalPrice,
     };
 
-    console.log('sendOrder PAYLOAD: ', payload);
-
     /* dodaj pętlę iterującą po wszystkich thisCart.products */
     for (let product of thisCart.products) {
 
       /* PUSH dodaje do tablicy */
       payload.products.push(product.getData());
-
-      // console.log('product.getData:', product.getData());
     }
 
     /* opcje konfigurujące zapytania. POST służy do wysyłąnia nowych danych do API. Ustawiamy header json zrozumiały dla serwera. Body to treść, którą wysyłamy. Tutaj używamy metody JSON.stringify aby przekonwertować obiekt payload na string w formacie JSON */
@@ -136,20 +131,13 @@ class Cart {
     /*generate HTML base on template*/
     const generatedHTML = templates.cartProduct(menuProduct);
 
-    // console.log('generated HTML', generatedHTML);
-
     /* create element using utils.createElementFromHTML*/
     const generatedDOM = utils.createDOMFromHTML(generatedHTML);
-
-    // console.log('generated DOM', generatedDOM);
 
     /* add DOM element to thisCart.dom.productList */
     thisCart.dom.productList.appendChild(generatedDOM);
 
-    // console.log('adding productMenu', menuProduct);
-
     thisCart.products.push(new CartProduct(menuProduct, generatedDOM));
-    // console.log('thisCart.products', thisCart.products);
 
     thisCart.update();
 
@@ -165,8 +153,6 @@ class Cart {
     }
 
     thisCart.totalPrice = thisCart.subtotalPrice + thisCart.deliveryFee;
-
-    console.log('totalNumber: ', thisCart.totalNumber, 'subtotalPrice: ', thisCart.subtotalPrice, 'thisCart.totalPrice: ', thisCart.totalPrice);
 
     for (let key of thisCart.renderTotalsKeys) {
       for (let elem of thisCart.dom[key]) {

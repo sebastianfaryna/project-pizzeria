@@ -103,11 +103,9 @@ class CartProduct {
       params: thisCartProduct.params,
     };
 
-    // console.log('getData productInfo: ', productInfo);
-
     return productInfo;
   }
 
-} // END Class CartProduct
+}
 
 export default CartProduct;

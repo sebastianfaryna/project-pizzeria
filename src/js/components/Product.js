@@ -254,6 +254,6 @@ class Product {
 
   }
 
-} // END class Product
+}
 
 export default Product;
