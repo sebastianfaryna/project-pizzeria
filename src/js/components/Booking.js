@@ -17,12 +17,14 @@ class Booking {
     thisBooking.render();
     thisBooking.initWidgets();
     thisBooking.getData();
+    thisBooking.selectTable();
+    thisBooking.sendOrder();
 
     // console.log('thisBooking: ', thisBooking);
 
   }
 
-  /* pobiera dane z API uużwyając adresów z parametrami filtrującymi wyniki */
+  /* pobiera dane z API używając adresów z parametrami filtrującymi wyniki */
   getData() {
     const thisBooking = this;
 
@@ -86,7 +88,6 @@ class Booking {
       });
   }
 
-  /*  */
   parseData(bookings, eventsCurrent, eventsRepeat) {
     const thisBooking = this;
 
@@ -136,6 +137,7 @@ class Booking {
       thisBooking.booked[date][hourBlock].push(table);
       /* w obiekcie thisBooking.booked znajdujemy klucz [date] będący datą przekazaną metodzie makeBooked w pierwszym argumencie. Wyrażenie "thisBooking.booked[date]" jest obiektem, w któym znajdujemy klucz [hour] równy wartości drugiego argumentu przekazanego metodzie makeBooked. Całe to wyrażenie "thisBooking.booked[date][hour]" jest tablicą, chcemy do niej dodać nowy element, który jest wartością argumentu table za pomocą metody push */
     }
+
   }
 
   updateDOM() {
@@ -168,48 +170,106 @@ class Booking {
     }
   }
 
+  /* klikanie w stolik */
+  selectTable() {
+    const thisBooking = this;
 
-render() {
-  const thisBooking = this;
+    for (let table of thisBooking.dom.tables) {
+      table.addEventListener('click', function(event) {
+        event.preventDefault();
 
-  /* generować kod HTML za pomocą szablonu templates.bookingWidget bez podawania mu jakiegokolwiek argumentu*/
-  const generateHTML = templates.bookingWidget();
+        table.classList.toggle(classNames.booking.tableBooked); // togluje zaznacz/odznacz kliknięty stolik
+        thisBooking.selectTable = table.getAttribute(settings.booking.tableIdAttribute);
 
-  /* tworzyć pusty obiekt thisBooking.dom */
-  thisBooking.dom = {};
+      });
+    }
+  }
 
-  /* zapisywać do tego obiektu właściwość wrapper równą otrzymanemu argumentowi */
-  thisBooking.dom.wrapper = document.querySelector(select.containerOf.booking);
+  /* analogicznie do wysłania zamówienia z Cart.js? */
+  sendOrder() {
+    const thisBooking = this;
 
-  /* zawartość wrappera zamieniać na kod HTML wygenerowany z szablonu, we właściwości thisBooking.dom. */
-  thisBooking.dom.wrapper.innerHTML = generateHTML;
+    /* w stałej url umieszczamy adres endpointu */
+    const url = settings.db.url + '/' + settings.db.order;
 
-  /* peopleAmount zapisywać pojedynczy element znaleziony we wrapperze i pasujący do selektora select.booking.peopleAmount */
-  thisBooking.dom.peopleAmount = thisBooking.dom.wrapper.querySelector(select.booking.peopleAmount);
+    /* 'payload' czyli ładunek - dane, które będą wysłane do serwera */
+    const payload = {
+      date: parseInt(thisBooking.datePicker.value),
+      hour: parseInt(thisBooking.hourPicker.value),
+      table: thisBooking.tableBooked,
+      ppl: parseInt(select.booking.peopleAmount.value),
+      duration: parseInt(select.booking.hoursAmount.value),
+      phone: parseInt(thisBooking.dom.phone.value),
+      address: parseInt(thisBooking.dom.address.value),
+      starters: [],
+    };
 
-  /* analogicznie do peopleAmount znaleźć i zapisać element dla hoursAmount */
-  thisBooking.dom.hoursAmount = thisBooking.dom.wrapper.querySelector(select.booking.hoursAmount);
+    /* opcje konfigurujące zapytania. POST służy do wysyłąnia nowych danych do API. Ustawiamy header json zrozumiały dla serwera. Body to treść, którą wysyłamy. Tutaj używamy metody JSON.stringify aby przekonwertować obiekt payload na string w formacie JSON */
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    };
 
-  thisBooking.dom.datePicker = thisBooking.dom.wrapper.querySelector(select.widgets.datePicker.wrapper);
+    fetch(url, options)
+      .then(function(response) {
+        return response.json();
+      }).then(function(parsedResponse) {
+        console.log('parsedResponse: ', parsedResponse);
+      });
+  }
 
-  thisBooking.dom.hourPicker = thisBooking.dom.wrapper.querySelector(select.widgets.hourPicker.wrapper);
+  render() {
+    const thisBooking = this;
 
-  thisBooking.dom.tables = thisBooking.dom.wrapper.querySelectorAll(select.booking.tables);
-}
+    /* generować kod HTML za pomocą szablonu templates.bookingWidget bez podawania mu jakiegokolwiek argumentu*/
+    const generateHTML = templates.bookingWidget();
 
-initWidgets() {
-  const thisBooking = this;
+    /* tworzyć pusty obiekt thisBooking.dom */
+    thisBooking.dom = {};
 
-  /* we właściwościach thisBooking.peopleAmount i thisBooking.hoursAmount zapisywać nowe instancje klasy AmountWidget, którym jako argument przekazujemy odpowiednie właściwości z obiektu thisBooking.dom */
-  thisBooking.peopleAmount = new AmountWidget(thisBooking.dom.peopleAmount);
-  thisBooking.hoursAmount = new AmountWidget(thisBooking.dom.hoursAmount);
-  thisBooking.datePicker = new DatePicker(thisBooking.dom.datePicker);
-  thisBooking.hourPicker = new HourPicker(thisBooking.dom.hourPicker);
+    /* zapisywać do tego obiektu właściwość wrapper równą otrzymanemu argumentowi */
+    thisBooking.dom.wrapper = document.querySelector(select.containerOf.booking);
 
-  thisBooking.dom.wrapper.addEventListener('updated', function(){
-    thisBooking.updateDOM();
-  });
-}
+    /* zawartość wrappera zamieniać na kod HTML wygenerowany z szablonu, we właściwości thisBooking.dom. */
+    thisBooking.dom.wrapper.innerHTML = generateHTML;
+
+    /* peopleAmount zapisywać pojedynczy element znaleziony we wrapperze i pasujący do selektora select.booking.peopleAmount */
+    thisBooking.dom.peopleAmount = thisBooking.dom.wrapper.querySelector(select.booking.peopleAmount);
+
+    /* analogicznie do peopleAmount znaleźć i zapisać element dla hoursAmount */
+    thisBooking.dom.hoursAmount = thisBooking.dom.wrapper.querySelector(select.booking.hoursAmount);
+
+    thisBooking.dom.datePicker = thisBooking.dom.wrapper.querySelector(select.widgets.datePicker.wrapper);
+
+    thisBooking.dom.hourPicker = thisBooking.dom.wrapper.querySelector(select.widgets.hourPicker.wrapper);
+
+    thisBooking.dom.tables = thisBooking.dom.wrapper.querySelectorAll(select.booking.tables);
+  }
+
+  initWidgets() {
+    const thisBooking = this;
+
+    /* we właściwościach thisBooking.peopleAmount i thisBooking.hoursAmount zapisywać nowe instancje klasy AmountWidget, którym jako argument przekazujemy odpowiednie właściwości z obiektu thisBooking.dom */
+    thisBooking.peopleAmount = new AmountWidget(thisBooking.dom.peopleAmount);
+    thisBooking.hoursAmount = new AmountWidget(thisBooking.dom.hoursAmount);
+    thisBooking.datePicker = new DatePicker(thisBooking.dom.datePicker);
+    thisBooking.hourPicker = new HourPicker(thisBooking.dom.hourPicker);
+
+    thisBooking.dom.wrapper.addEventListener('updated', function() {
+      thisBooking.updateDOM();
+    });
+
+    /* nasłuchiwanie kliknięcia w przycisk */
+    thisBooking.dom.form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      thisBooking.sendOrder();
+    });
+  }
+
+
 
 }
 

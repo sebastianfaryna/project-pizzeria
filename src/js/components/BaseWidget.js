@@ -29,7 +29,7 @@ class BaseWidget {
     thisWidget.renderValue();
   }
 
-  setvalue(value) {
+  setValue(value) {
     const thisWidget = this;
 
     thisWidget.value = value;
