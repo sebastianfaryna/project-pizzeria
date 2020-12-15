@@ -25,10 +25,13 @@
           <h1 class="logo__title"><span>Mamma</span>Mia!</h1>
           <h2 class="logo__subtitle">the best homemade Italian food</h2>
         </div>
-        <div class="main-nav">
-          <a href="#index">Index</a>
-          <a href="#order">Order</a>
+        <div class="main-nav"> <!-- zmień kolejność, która podstrona ma być wyświetlana jako pierwsza -->
           <a href="#booking">Booking</a>
+
+          <a href="#index">Index</a>
+
+          <a href="#order">Order</a>
+
         </div>
         <div id="cart" class="cart">
           <div class="cart__summary">
@@ -68,6 +71,11 @@
   </header>
 
   <div id="pages">
+
+    <section id="booking">
+      <div class="booking-wrapper container"></div>
+    </section>
+
     <section id="index">
       <div id="index-page" class="main-page container">
 
@@ -90,9 +98,7 @@
     <section id="order">
       <div id="product-list" class="product-list container"></div>
     </section>
-    <section id="booking">
-      <div class="booking-wrapper container"></div>
-    </section>
+
   </div>
 
   <script id="template-booking-widget" type="text/x-handlebars-template">

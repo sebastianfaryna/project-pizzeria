@@ -18,7 +18,6 @@ class Booking {
     thisBooking.initWidgets();
     thisBooking.getData();
     thisBooking.selectTable();
-    thisBooking.sendOrder();
 
     // console.log('thisBooking: ', thisBooking);
 
@@ -178,14 +177,33 @@ class Booking {
       table.addEventListener('click', function(event) {
         event.preventDefault();
 
-        table.classList.toggle(classNames.booking.tableBooked); // togluje zaznacz/odznacz kliknięty stolik
-        thisBooking.selectTable = table.getAttribute(settings.booking.tableIdAttribute);
+        if (!table.classList.contains(classNames.booking.tableBooked)) {
+          if (table.classList.contains(classNames.booking.tableChose)) {
+            thisBooking.removeSelectedTable(); //patrz metoda poniżej
+          } else {
+            thisBooking.removeSelectedTable();
+            table.classList.add(classNames.booking.tableChose);
+            thisBooking.selectTable = table.getAttribute(settings.booking.tableIdAttribute);
 
+            thisBooking.tableBooked = parseInt(thisBooking.selectTable); //parsowanie numeru zabookowanego stolika
+          }
+        }
       });
     }
   }
 
-  /* analogicznie do wysłania zamówienia z Cart.js? */
+  removeSelectedTable() {
+    const thisBooking = this;
+
+    const activeTables = thisBooking.dom.wrapper.querySelectorAll(select.booking.tables + '.' + classNames.booking.tableChose);
+
+    for (let table of activeTables) {
+      table.classList.remove(classNames.booking.tableChose);
+    }
+
+  }
+
+  /* analogicznie do wysłania zamówienia z Cart.js */
   sendOrder() {
     const thisBooking = this;
 
@@ -194,15 +212,20 @@ class Booking {
 
     /* 'payload' czyli ładunek - dane, które będą wysłane do serwera */
     const payload = {
-      date: parseInt(thisBooking.datePicker.value),
-      hour: parseInt(thisBooking.hourPicker.value),
-      table: thisBooking.tableBooked,
-      ppl: parseInt(select.booking.peopleAmount.value),
-      duration: parseInt(select.booking.hoursAmount.value),
-      phone: parseInt(thisBooking.dom.phone.value),
-      address: parseInt(thisBooking.dom.address.value),
+      date: thisBooking.datePicker.value,
+      hour: thisBooking.hourPicker.value,
+      table: thisBooking.tableBooked, //patrz linia 188.
+      ppl: thisBooking.peopleAmount.value,
+      duration: thisBooking.hoursAmount.value,
+      phone: thisBooking.dom.phone.value,
+      address: thisBooking.dom.address.value,
       starters: [],
     };
+
+    const starters = thisBooking.dom.wrapper.querySelectorAll('input[name="starter"]:checked');
+    for (let checkbox of starters) {
+      payload.starters.push(checkbox.value);
+    }
 
     /* opcje konfigurujące zapytania. POST służy do wysyłąnia nowych danych do API. Ustawiamy header json zrozumiały dla serwera. Body to treść, którą wysyłamy. Tutaj używamy metody JSON.stringify aby przekonwertować obiekt payload na string w formacie JSON */
     const options = {
@@ -247,6 +270,12 @@ class Booking {
     thisBooking.dom.hourPicker = thisBooking.dom.wrapper.querySelector(select.widgets.hourPicker.wrapper);
 
     thisBooking.dom.tables = thisBooking.dom.wrapper.querySelectorAll(select.booking.tables);
+
+    thisBooking.dom.form = thisBooking.dom.wrapper.querySelector(select.booking.form);
+
+    thisBooking.dom.phone = thisBooking.dom.wrapper.querySelector(select.booking.phone);
+
+    thisBooking.dom.address = thisBooking.dom.wrapper.querySelector(select.booking.address);
   }
 
   initWidgets() {
@@ -268,8 +297,6 @@ class Booking {
       thisBooking.sendOrder();
     });
   }
-
-
 
 }
 
