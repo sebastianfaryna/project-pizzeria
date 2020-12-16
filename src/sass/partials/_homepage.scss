@@ -1,4 +1,4 @@
-.main-page {
+.home-page {
   width: 100%;
   margin: 0 auto;
   padding: 36px 0;
@@ -12,11 +12,13 @@
 
   .col-6,
   .col-12 {
+    border: 1px solid black;
     text-align: center;
     font-family: $font-header;
     color: $color-dark;
     text-decoration: none;
     text-transform: uppercase;
+
 
     .span {
       font-weight: $font-light;

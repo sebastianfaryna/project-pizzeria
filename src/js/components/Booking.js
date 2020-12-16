@@ -160,11 +160,11 @@ class Booking {
       }
 
       if ( //sprawdz czy któryś stolik jest zajęty
-        !allAvailable && thisBooking.booked[thisBooking.date][thisBooking.hour].includes(tableId) //includes sprawdza czy ten element "(tableId)" znajduje się w tablicy "thisBooking.booked[thisBooking.date][thisBooking.hour]" jeśli tak, to stolik jest zajęty i dostaniej klasę zapisaną w "classNames.booking.tableBooked"
+        !allAvailable && thisBooking.booked[thisBooking.date][thisBooking.hour].includes(tableId) //includes sprawdza czy ten element "(tableId)" znajduje się w tablicy "thisBooking.booked[thisBooking.date][thisBooking.hour]"
       ) {
-        table.classList.add(classNames.booking.tableBooked);
+        table.classList.add(classNames.booking.tableBooked); //jeśli tak, to stolik jest zajęty i dostaniej klasę zapisaną w "classNames.booking.tableBooked"
       } else {
-        table.classList.remove(classNames.booking.tableBooked); //usuń klasę oznaczającą zajętość stolika
+        table.classList.remove(classNames.booking.tableBooked); //jeśli nie usuń klasę oznaczającą zajętość stolika
       }
     }
   }
@@ -204,11 +204,11 @@ class Booking {
   }
 
   /* analogicznie do wysłania zamówienia z Cart.js */
-  sendOrder() {
+  sendBooking() {
     const thisBooking = this;
 
     /* w stałej url umieszczamy adres endpointu */
-    const url = settings.db.url + '/' + settings.db.order;
+    const url = settings.db.url + '/' + settings.db.booking;
 
     /* 'payload' czyli ładunek - dane, które będą wysłane do serwera */
     const payload = {
@@ -239,9 +239,18 @@ class Booking {
     fetch(url, options)
       .then(function(response) {
         return response.json();
-      }).then(function(parsedResponse) {
+      })
+
+      .then(function(parsedResponse) {
+
+        // thisBooking.makeBooked(); // nie działa - błąd z "split" w utils.js
+
+        thisBooking.updateDOM();
+
         console.log('parsedResponse: ', parsedResponse);
       });
+
+
   }
 
   render() {
@@ -294,7 +303,7 @@ class Booking {
     /* nasłuchiwanie kliknięcia w przycisk */
     thisBooking.dom.form.addEventListener('submit', function(event) {
       event.preventDefault();
-      thisBooking.sendOrder();
+      thisBooking.sendBooking();
     });
   }
 

@@ -1,5 +1,5 @@
 .header {
-  padding: ($base-size * 5) 0 ($base-size * 5) 0;
+  padding: ($base-size * 5) 0 ($base-size * 8) 0;
   background: $color-dark;
   color: $color-light;
 
@@ -33,14 +33,16 @@
     font-style: italic;
   }
 
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 .main-nav {
   position: absolute;
   @include flex(row, flex-start, flex-start);
   bottom: ($base-size * -8);
-  display: none;
-
 
   a {
     @extend .h2;
