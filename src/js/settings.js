@@ -66,7 +66,7 @@ export const select = {
     address: '[name="address"]',
   },
   nav: {
-    links: '.main-nav a',
+    links: 'a.main-link',
   },
 };
 

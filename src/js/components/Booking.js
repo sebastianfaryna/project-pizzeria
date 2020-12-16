@@ -183,9 +183,7 @@ class Booking {
           } else {
             thisBooking.removeSelectedTable();
             table.classList.add(classNames.booking.tableChose);
-            thisBooking.selectTable = table.getAttribute(settings.booking.tableIdAttribute);
-
-            thisBooking.tableBooked = parseInt(thisBooking.selectTable); //parsowanie numeru zabookowanego stolika
+            thisBooking.selectTable = parseInt(table.getAttribute(settings.booking.tableIdAttribute));
           }
         }
       });
@@ -200,7 +198,7 @@ class Booking {
     for (let table of activeTables) {
       table.classList.remove(classNames.booking.tableChose);
     }
-
+    thisBooking.selectTable = null;
   }
 
   /* analogicznie do wysłania zamówienia z Cart.js */
@@ -214,7 +212,7 @@ class Booking {
     const payload = {
       date: thisBooking.datePicker.value,
       hour: thisBooking.hourPicker.value,
-      table: thisBooking.tableBooked, //patrz linia 188.
+      table: thisBooking.selectTable, //patrz linia 188.
       ppl: thisBooking.peopleAmount.value,
       duration: thisBooking.hoursAmount.value,
       phone: thisBooking.dom.phone.value,
@@ -243,13 +241,14 @@ class Booking {
 
       .then(function(parsedResponse) {
 
-        // thisBooking.makeBooked(); // nie działa - błąd z "split" w utils.js
+        thisBooking.makeBooked(parsedResponse.date, parsedResponse.hour, parsedResponse.duration, parsedResponse.table);
+
+        thisBooking.removeSelectedTable();
 
         thisBooking.updateDOM();
 
-        console.log('parsedResponse: ', parsedResponse);
+        // console.log('parsedResponse: ', parsedResponse);
       });
-
 
   }
 
